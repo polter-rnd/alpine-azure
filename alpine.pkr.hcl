@@ -7,11 +7,11 @@ variables {
   accelerator = "unset"
   display = "unset"
   p_root = "unset"
-  v_alpine_major = "3.15"
+  v_alpine_major = "3.17"
   v_alpine_minor = "0"
   v_internal = "r0"
-  v_waagent = "2.4.0.2"
-  c_alpine = "e97eaedb3bff39a081d1d7e67629d5c0e8fb39677d6a9dd1eaf2752e39061e02"
+  v_waagent = "2.8.0.11"
+  c_alpine = "8d4d53bd34b2045e1e219b87887b0de8d217b6cd4a8b476a077429845a5582ba"
 }
 
 locals {
@@ -44,9 +44,10 @@ source "qemu" "alpine" {
     "root<enter>",
     "ifconfig eth0 up && udhcpc -i eth0<enter>",
     "wget -O /answers http://{{.HTTPIP}}:{{.HTTPPort}}/answers<enter>", 
-    "USERANSERFILE=1 setup-alpine -f /answers<enter><wait5><wait5>", 
+    "BOOT_SIZE=50 USERANSERFILE=1 setup-alpine -f /answers<enter><wait5><wait5>",
     "${var.p_root}<enter>", 
     "${var.p_root}<enter>", 
+    "no<enter>",
     "y<enter>",
     "mount /dev/vda2 /mnt<enter>",
     "sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/g' /mnt/etc/ssh/sshd_config<enter>",
@@ -57,7 +58,7 @@ source "qemu" "alpine" {
   memory = 2048
   boot_wait = "10s"
   communicator = "ssh"
-  disk_size = "350"
+  disk_size = "512"
   display = var.display
   http_directory = "srv"
   http_port_min = 8080

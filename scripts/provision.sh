@@ -7,8 +7,7 @@
 set -e
 
 apks() {
-    apk add --no-cache hvtools openssl sudo bash shadow parted iptables sfdisk python3 py3-setuptools py3-pip util-linux
-    ln -s /usr/bin/python3 /usr/bin/python
+    apk add --no-cache hvtools openssl sudo bash shadow parted iptables ip6tables sfdisk python3 py3-setuptools py3-distro util-linux
 }
 apks
 
@@ -23,6 +22,16 @@ waagent() {
     wget -q https://github.com/Azure/WALinuxAgent/archive/v${VERSION_WAAGENT}.tar.gz && tar xzf v${VERSION_WAAGENT}.tar.gz && rm v${VERSION_WAAGENT}.tar.gz
     cd WALinuxAgent-${VERSION_WAAGENT} && python3 setup.py install
     cd .. && rm -rf WALinuxAgent-${VERSION_WAAGENT}
+
+    # To suppress error in WAAgent when cheking for cloud-init presence
+    cat >/etc/init.d/cloud-init <<EOF
+#!/sbin/openrc-run
+
+start() {
+    :
+}
+EOF
+    chmod +x /etc/init.d/cloud-init
 
     cat >/etc/init.d/waagent <<EOF
 #!/sbin/openrc-run
@@ -68,6 +77,8 @@ sshd() {
     sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin no/g' /etc/ssh/sshd_config
     sed -i 's/#PasswordAuthentication/PasswordAuthentication/g' /etc/ssh/sshd_config
     sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/g' /etc/ssh/sshd_config
+    sed -i 's/#PubkeyAuthentication/PubkeyAuthentication/g' /etc/ssh/sshd_config
+    sed -i 's/PubkeyAuthentication no/PubkeyAuthentication yes/g' /etc/ssh/sshd_config
     sed -i 's:#HostKey /etc/ssh/ssh_host_ed25519_key:HostKey /etc/ssh/ssh_host_ed25519_key:g' /etc/ssh/sshd_config
 
 }
